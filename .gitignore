@@ -1,0 +1,11 @@
+# Power BI local/cache files (machine-specific, large, regenerated automatically)
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Excel lock files created while a workbook is open
+~$*.xlsx
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+.vscode/
