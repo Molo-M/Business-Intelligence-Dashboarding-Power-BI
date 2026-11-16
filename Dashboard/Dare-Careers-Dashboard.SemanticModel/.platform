@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Dare-Careers-Dashboard"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "80c97929-a6bb-4742-be46-5099b4847c10"
+  }
+}
