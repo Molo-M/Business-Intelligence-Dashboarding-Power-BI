@@ -1,0 +1,21 @@
+/// Full path to the repo's Data folder, ending with a backslash
+expression RootFolder = "C:\Users\GADGET STORE\Downloads\AmaliTech\Business-Intelligence-Dashboarding-Power-BI\Data\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: ddc7bb12-7228-4d47-b41c-f858a252e0e9
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression src_AllFiles =
+		let
+		    Source = Folder.Files(RootFolder)
+		in
+		    Source
+	lineageTag: 243f3046-da1e-4a5a-ba2e-5d75d228ae89
+	queryGroup: Sources
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

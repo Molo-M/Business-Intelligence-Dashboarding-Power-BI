@@ -7,9 +7,20 @@ model Model
 		legacyRedirects
 		returnErrorValuesAsNull
 
+/// Settings used by other queries
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup Sources
+
+	annotation PBI_QueryGroupOrder = 1
+
 annotation __PBI_TimeIntelligenceEnabled = 1
 
 annotation PBI_ProTooling = ["DevMode"]
+
+annotation PBI_QueryOrder = ["RootFolder","src_AllFiles"]
 
 ref cultureInfo en-US
 
