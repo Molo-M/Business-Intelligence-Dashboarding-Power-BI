@@ -5,7 +5,7 @@ for Dare Careers' PowerBI Training and Cloud Training tracks (Aug–Oct 2024 coh
 
 ## Project status
 - [x] Phase 0 – Setup
-- [ ] Phase 1 – Power Query (data cleaning)
+- [x] Phase 1 – Power Query (data cleaning)
 - [ ] Phase 2 – Data model
 - [ ] Phase 3 – DAX measures
 - [ ] Phase 4 – Page 1: Overall Performance
