@@ -16,11 +16,25 @@ queryGroup Sources
 
 	annotation PBI_QueryGroupOrder = 1
 
-annotation __PBI_TimeIntelligenceEnabled = 1
+queryGroup Functions
+
+	annotation PBI_QueryGroupOrder = 2
+
+queryGroup Model
+
+	annotation PBI_QueryGroupOrder = 3
+
+annotation __PBI_TimeIntelligenceEnabled = 0
 
 annotation PBI_ProTooling = ["DevMode"]
 
-annotation PBI_QueryOrder = ["RootFolder","src_AllFiles"]
+annotation PBI_QueryOrder = ["RootFolder","src_AllFiles","fn_DurationToMinutes","fact_Attendance","ProgramStartDate","fact_Assessments","dim_Learner","fact_Participation","dim_Date"]
+
+ref table fact_Attendance
+ref table fact_Assessments
+ref table dim_Learner
+ref table fact_Participation
+ref table dim_Date
 
 ref cultureInfo en-US
 

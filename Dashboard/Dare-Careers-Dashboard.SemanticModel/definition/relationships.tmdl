@@ -1,0 +1,24 @@
+relationship AutoDetected_b6fb1cca-a560-4be2-b84f-eb454a45cfa5
+	fromColumn: fact_Attendance.Email
+	toColumn: dim_Learner.Email
+
+relationship AutoDetected_835d5e27-df85-451b-9963-eb50cd1611f1
+	fromColumn: fact_Assessments.Email
+	toColumn: dim_Learner.Email
+
+relationship AutoDetected_c6bc2584-fa34-476b-9a51-6e486605203c
+	fromColumn: fact_Participation.Email
+	toColumn: dim_Learner.Email
+
+relationship 1ef340c0-5a54-2456-6afc-df6c60955b2e
+	fromColumn: fact_Attendance.Date
+	toColumn: dim_Date.Date
+
+relationship 5a89ac94-de74-7dc9-3a28-b44718a90a76
+	fromColumn: fact_Assessments.'Week Start Date'
+	toColumn: dim_Date.Date
+
+relationship ee6ed78b-9ef6-7018-ae53-1db28bfb098a
+	fromColumn: fact_Participation.Date
+	toColumn: dim_Date.Date
+

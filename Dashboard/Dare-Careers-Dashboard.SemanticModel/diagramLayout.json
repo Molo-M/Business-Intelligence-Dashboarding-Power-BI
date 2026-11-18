@@ -5,11 +5,77 @@
       "ordinal": 0,
       "scrollPosition": {
         "x": 0,
-        "y": 0
+        "y": 51.55951863046311
       },
-      "nodes": [],
+      "nodes": [
+        {
+          "location": {
+            "x": 688.1086777152201,
+            "y": 501.05000804506318
+          },
+          "nodeIndex": "fact_Attendance",
+          "nodeLineageTag": "97e1799c-b831-4100-842a-0778bf2aabe6",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 684.84000643605054,
+            "y": 0
+          },
+          "nodeIndex": "fact_Assessments",
+          "nodeLineageTag": "16a730a0-8de7-4071-9b7a-dab2de52f922",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 207.24399420755449,
+            "y": 236.05022601234089
+          },
+          "nodeIndex": "dim_Learner",
+          "nodeLineageTag": "5392a3c5-d56f-4cb1-b8aa-89b12a972f3a",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 687.21021957629034,
+            "y": 274.91578138911723
+          },
+          "nodeIndex": "fact_Participation",
+          "nodeLineageTag": "db862701-0a94-4eaf-b215-aef18828fe03",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 1104.8235550549739,
+            "y": 226.91578138911726
+          },
+          "nodeIndex": "dim_Date",
+          "nodeLineageTag": "7c6f60c1-230f-410a-a9f8-2589c09aaff7",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 5
+        }
+      ],
       "name": "All tables",
-      "zoomValue": 100,
+      "zoomValue": 55.599173134922466,
       "pinKeyFieldsToTop": false,
       "showExtraHeaderInfo": false,
       "hideKeyFieldsWhenCollapsed": false,

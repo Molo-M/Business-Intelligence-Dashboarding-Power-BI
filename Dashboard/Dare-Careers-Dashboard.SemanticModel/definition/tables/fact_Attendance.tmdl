@@ -1,0 +1,184 @@
+table fact_Attendance
+	lineageTag: 97e1799c-b831-4100-842a-0778bf2aabe6
+
+	column Track
+		dataType: string
+		isHidden
+		lineageTag: b0525109-ae0a-4195-9745-974b904bc682
+		summarizeBy: none
+		sourceColumn: Track
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ed087b0f-f880-4387-8ac5-32aa55df46e0
+		summarizeBy: sum
+		sourceColumn: Week
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		lineageTag: 7c498e25-f8ff-4e43-acad-d87302c52be9
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Email
+		dataType: string
+		isHidden
+		lineageTag: 7e2e4e11-fddf-4e69-8bfa-6d39a0277cc5
+		summarizeBy: none
+		sourceColumn: Email
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Name
+		dataType: string
+		isHidden
+		lineageTag: 1bacd450-6a45-413b-bed2-27a1c264d837
+		summarizeBy: none
+		sourceColumn: Name
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Join Time'
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 5d38a545-35ae-4619-90c1-674f5697489e
+		summarizeBy: none
+		sourceColumn: Join Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column 'Leave Time'
+		dataType: dateTime
+		formatString: Long Time
+		lineageTag: 45b891b2-522d-4524-9e24-17c0b8543e95
+		summarizeBy: none
+		sourceColumn: Leave Time
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Time
+
+	column Minutes
+		dataType: double
+		lineageTag: d6ec8a74-ff9d-48de-8fc3-72a604f3a5b6
+		summarizeBy: sum
+		sourceColumn: Minutes
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Attended
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6eef2e95-4a9e-4520-8d97-26b992c7d074
+		summarizeBy: none
+		sourceColumn: Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Class Time %'
+		dataType: double
+		lineageTag: 52cd6608-5bb1-4ac2-a022-abf2991a08dd
+		summarizeBy: sum
+		sourceColumn: Class Time %
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition fact_Attendance = m
+		mode: import
+		queryGroup: Model
+		source =
+				let
+				    // 1. Start from the list of all files
+				    Source = src_AllFiles,
+				
+				    // 2. Keep only the Zoom CSVs (ignore the Excel files)
+				    ZoomFiles = Table.SelectRows(Source, each
+				        [Extension] = ".csv" and Text.Contains([Folder Path], "Zoom Attendance")),
+				
+				    // 3. Track comes from the folder path
+				    AddTrack = Table.AddColumn(ZoomFiles, "Track", each
+				        if Text.Contains([Folder Path], "Cloud Training") then "AWS Cloud"
+				        else if Text.Contains([Folder Path], "PowerBI Training") then "Power BI"
+				        else null, type text),
+				
+				    // 4. Week number comes from the "Week N" folder name
+				    AddWeek = Table.AddColumn(AddTrack, "Week", each
+				        Number.From(Text.BetweenDelimiters([Folder Path], "Week ", "\")), Int64.Type),
+				
+				    // 5. Date comes from the first 11 characters of the file name, e.g. "05-Aug-2024"
+				    AddDate = Table.AddColumn(AddWeek, "Date", each
+				        Date.FromText(Text.Start([Name], 11), [Format = "dd-MMM-yyyy", Culture = "en-US"]), type date),
+				
+				    // 6. Open each CSV (the "Content" column) into a small table
+				    AddData = Table.AddColumn(AddDate, "Data", each
+				        Table.PromoteHeaders(
+				            Csv.Document([Content], [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				            [PromoteAllScalars = true])),
+				
+				    // 7. Drop the file-info columns and stack all 100 small tables into one
+				    KeepCols = Table.SelectColumns(AddData, {"Track", "Week", "Date", "Data"}),
+				    Expanded = Table.ExpandTableColumn(KeepCols, "Data",
+				        {"Name", "Email", "Join Time", "Leave Time", "Duration", "Role"}),
+				
+				    // 8. Keep learners only (excludes hosts/co-hosts if any appear)
+				    OnlyParticipants = Table.SelectRows(Expanded, each [Role] = "Participant"),
+				
+				    // 9. Tidy text: trim spaces, lowercase emails so they match other files
+				    Cleaned = Table.TransformColumns(OnlyParticipants, {
+				        {"Name", Text.Trim, type text},
+				        {"Email", each Text.Lower(Text.Trim(_)), type text}}),
+				
+				    // 10. Convert Duration to minutes using our function
+				    AddMinutes = Table.AddColumn(Cleaned, "Minutes", each fn_DurationToMinutes([Duration]), type number),
+				
+				    // 11. Convert join/leave times (handles both "06:02 PM" and "18:09")
+				    Typed = Table.TransformColumnTypes(AddMinutes,
+				        {{"Join Time", type time}, {"Leave Time", type time}}, "en-US"),
+				
+				    // 12. One row per learner per day (adds up minutes if someone dropped and rejoined)
+				    Grouped = Table.Group(Typed, {"Track", "Week", "Date", "Email", "Name"}, {
+				        {"Join Time", each List.Min([Join Time]), type time},
+				        {"Leave Time", each List.Max([Leave Time]), type time},
+				        {"Minutes", each List.Sum([Minutes]), type number}}),
+				
+				    // 13. The project rule: attended only if MORE than 30 minutes
+				    AddAttended = Table.AddColumn(Grouped, "Attended", each [Minutes] > 30, type logical),
+				
+				    // 14. Share of the 120-minute class attended (capped at 100%)
+				    AddClassPct = Table.AddColumn(AddAttended, "Class Time %", each
+				        List.Min({[Minutes] / 120, 1}), Percentage.Type)
+				in
+				    AddClassPct
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
