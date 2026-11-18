@@ -54,23 +54,48 @@ let
         else if [Track] = "Power BI" then "Power BI Certification"
         else null, type text),
 
-    // 11. Program Status: the program ends on the Friday of Week 10
-    ProgramEndDate = Date.AddDays(ProgramStartDate, 10 * 7 - 3),
+    // 11. Program length and Program Status: the program ends on the Friday of the last week
+    ProgramWeeks = 10,
+    ProgramEndDate = Date.AddDays(ProgramStartDate, ProgramWeeks * 7 - 3),
     AddProgramStatus = Table.AddColumn(AddCertType, "Program Status", each
         if Date.From(DateTime.LocalNow()) > ProgramEndDate then "Completed" else "Ongoing", type text),
 
-    // 12. 1/0 flags for easy counting and rates in DAX
-    AddIsGraduate = Table.AddColumn(AddProgramStatus, "Is Graduate", each
+    // 12. ATTENDANCE SUMMARY per learner, using only classes that pass the 30-minute rule
+    AttendedRows = Table.SelectRows(fact_Attendance, each [Attended] = true),
+    AttendanceSummary = Table.Group(AttendedRows, {"Email"}, {
+        {"Weeks Attended", each List.Count(List.Distinct([Week])), Int64.Type},
+        {"Last Week Attended", each List.Max([Week]), Int64.Type}}),
+    MergedAttendance = Table.NestedJoin(AddProgramStatus, {"Email"},
+        AttendanceSummary, {"Email"}, "Att", JoinKind.LeftOuter),
+    AddAttendance = Table.ExpandTableColumn(MergedAttendance, "Att",
+        {"Weeks Attended", "Last Week Attended"}),
+
+    // 13. A learner who never attended a class has no summary row: show 0, not blank
+    FillZeros = Table.ReplaceValue(AddAttendance, null, 0, Replacer.ReplaceValue,
+        {"Weeks Attended", "Last Week Attended"}),
+    TypedAttendance = Table.TransformColumnTypes(FillZeros, {
+        {"Weeks Attended", Int64.Type}, {"Last Week Attended", Int64.Type}}),
+
+    // 14. 1/0 flags for easy counting and rates in DAX
+    AddIsGraduate = Table.AddColumn(TypedAttendance, "Is Graduate", each
         if [Graduation Status] = "Graduate" then 1 else 0, Int64.Type),
     AddIsCertified = Table.AddColumn(AddIsGraduate, "Is Certified", each
         if [Certification Status] = "Certified" then 1 else 0, Int64.Type),
-    AddIsDropout = Table.AddColumn(AddIsCertified, "Is Dropout", each
-        if [Graduation Status] = "Non Graduate" then 1 else 0, Int64.Type),
 
-    // 13. Put columns in a sensible order
+    // 15. DROPOUT: the program has finished, but the learner's last attended class
+    //     (more than 30 minutes) was before the final week.
+    //     While a program is still ongoing, nobody is counted as a dropout yet.
+    //     Stricter alternative ("attended every week"): replace
+    //     [Last Week Attended] < ProgramWeeks   with   [Weeks Attended] < ProgramWeeks
+    AddIsDropout = Table.AddColumn(AddIsCertified, "Is Dropout", each
+        if [Program Status] = "Completed" and [Last Week Attended] < ProgramWeeks then 1 else 0,
+        Int64.Type),
+
+    // 16. Put columns in a sensible order
     Reordered = Table.ReorderColumns(AddIsDropout, {
         "Email", "Learner Name", "Track", "Cohort",
         "Graduation Status", "Certification Status", "Certification Type",
-        "Program Status", "Is Graduate", "Is Certified", "Is Dropout"})
+        "Program Status", "Weeks Attended", "Last Week Attended",
+        "Is Graduate", "Is Certified", "Is Dropout"})
 in
     Reordered

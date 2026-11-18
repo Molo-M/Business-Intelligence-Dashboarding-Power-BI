@@ -8,7 +8,7 @@ program, a single track or cohort, a week or month, or an individual learner.
 
 | Table | Grain (one row per…) | Key columns used by measures |
 |---|---|---|
-| `dim_Learner` | learner | `Email`, `Is Graduate`, `Is Certified`, `Is Dropout` |
+| `dim_Learner` | learner | `Email`, `Is Graduate`, `Is Certified`, `Is Dropout`, `Weeks Attended`, `Last Week Attended` |
 | `dim_Date` | calendar day (05-Aug-2024 → 13-Oct-2024) | `Date`, `Is Class Day` |
 | `fact_Attendance` | learner per class day they joined Zoom | `Minutes`, `Attended` |
 | `fact_Participation` | learner per day they participated | (row count) |
@@ -24,7 +24,11 @@ Relationships: `dim_Learner[Email]` and `dim_Date[Date]` → each fact table (on
    Power Query (`fact_Attendance[Attended]`) and used by every attendance measure, including hours in class.
 2. **Class length:** each class runs 6:00–8:00 PM, i.e. **120 minutes**.
 3. **Class days:** Monday to Friday, 5 per week, 50 over the 10-week program (`dim_Date[Is Class Day]`).
-4. **Dropout:** a learner whose Graduation Status is **Non Graduate**.
+4. **Dropout:** a learner who **did not attend any class in the final week (Week 10)** of a completed program,
+   i.e. their last attended class (more than 30 minutes, see rule 1) was before Week 10. A learner who never
+   attended counts as a dropout. While a program is still ongoing, nobody is counted as a dropout.
+   Dropout is **independent of graduation**: a learner can complete every week and still not graduate.
+   Calculated in Power Query (`dim_Learner[Last Week Attended]` → `dim_Learner[Is Dropout]`).
 5. **Lab completed:** a lab counts as completed only if its **score is above 0**. A score of 0 is treated
    as not submitted. Zeros are still **included** in average scores, as a missed lab lowers a learner's average.
 6. **Assessment dates:** labs and quizzes are recorded per week, so each is dated to the **Monday of its week**.
@@ -62,7 +66,7 @@ Number of learners who achieved certification. *Format: whole number.*
 Total Dropouts =
 SUM ( dim_Learner[Is Dropout] )
 ```
-Number of learners who did not graduate (see rule 4). *Format: whole number.*
+Number of learners who stopped attending before the final week (see rule 4). *Format: whole number.*
 
 ### Graduation Rate
 ```dax
@@ -83,7 +87,7 @@ Share of learners who achieved certification. *Format: percentage, 1 decimal.*
 Dropout Rate =
 DIVIDE ( [Total Dropouts], [Total Learners] )
 ```
-Share of learners who dropped out. *Format: percentage, 1 decimal.*
+Share of learners who stopped attending before the final week (see rule 4). *Format: percentage, 1 decimal.*
 
 ---
 
@@ -216,16 +220,15 @@ Average number of labs completed per learner, out of 10. *Format: decimal, 2 dec
 ## Validation results
 
 Values checked against independent calculations from the raw source files (no slicers applied).
+Dropout and attendance measures depend on the full Zoom attendance data and are recorded separately below.
 
 | Measure | AWS Cloud | Power BI | Total |
 |---|---|---|---|
 | Total Learners | 40 | 100 | 140 |
 | Total Graduations | 33 | 86 | 119 |
 | Total Certifications | 24 | 68 | 92 |
-| Total Dropouts | 7 | 14 | 21 |
 | Graduation Rate | 82.5% | 86.0% | 85.0% |
 | Certification Rate | 60.0% | 68.0% | 65.7% |
-| Dropout Rate | 17.5% | 14.0% | 15.0% |
 | Days Participated | 1,784 | 4,253 | 6,037 |
 | Participation Rate | 89.2% | 85.1% | 86.2% |
 | Avg Assessment Score | 51.8 | 50.4 | 50.8 |
@@ -234,3 +237,14 @@ Values checked against independent calculations from the raw source files (no sl
 | Labs Completed | 396 | 987 | 1,383 |
 | Avg Labs Completed per Learner | 9.90 | 9.87 | 9.88 |
 | Class Days | 50 | 50 | 50 |
+
+### Dropout and attendance measures (from Power BI)
+
+| Measure | AWS Cloud | Power BI | Total |
+|---|---|---|---|
+| Total Dropouts | 0 | 0 | 0 |
+| Dropout Rate | 0.0% | 0.0% | 0.0% |
+| Days Attended | 1,585 | 5,000 | 6,585 |
+| Attendance Rate | 79.3% | 100.0% | 94.1% |
+| Total Hours in Class | 1,813.0 | 8,752.7 | 10,565.7 |
+| Avg Class Time % | 45.3% | 87.5% | 75.5% |

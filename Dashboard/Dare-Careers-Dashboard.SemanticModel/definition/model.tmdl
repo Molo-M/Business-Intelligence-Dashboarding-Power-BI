@@ -28,13 +28,14 @@ annotation __PBI_TimeIntelligenceEnabled = 0
 
 annotation PBI_ProTooling = ["DevMode"]
 
-annotation PBI_QueryOrder = ["RootFolder","src_AllFiles","fn_DurationToMinutes","fact_Attendance","ProgramStartDate","fact_Assessments","dim_Learner","fact_Participation","dim_Date"]
+annotation PBI_QueryOrder = ["RootFolder","src_AllFiles","fn_DurationToMinutes","fact_Attendance","ProgramStartDate","fact_Assessments","dim_Learner","fact_Participation","dim_Date","_Measures"]
 
 ref table fact_Attendance
 ref table fact_Assessments
 ref table dim_Learner
 ref table fact_Participation
 ref table dim_Date
+ref table _Measures
 
 ref cultureInfo en-US
 
