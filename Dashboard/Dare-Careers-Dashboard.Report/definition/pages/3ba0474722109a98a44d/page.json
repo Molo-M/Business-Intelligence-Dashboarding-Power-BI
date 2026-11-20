@@ -1,8 +1,40 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
   "name": "3ba0474722109a98a44d",
-  "displayName": "Page 1",
+  "displayName": "Overall Performance",
   "displayOption": "FitToPage",
   "height": 1080,
-  "width": 1920
+  "width": 1920,
+  "visualInteractions": [
+    {
+      "source": "82781a4f9c9c04c0aed5",
+      "target": "ca563aeb401b388c50e9",
+      "type": "DataFilter"
+    },
+    {
+      "source": "82781a4f9c9c04c0aed5",
+      "target": "64f9629089ca75640562",
+      "type": "DataFilter"
+    },
+    {
+      "source": "ca563aeb401b388c50e9",
+      "target": "82781a4f9c9c04c0aed5",
+      "type": "DataFilter"
+    },
+    {
+      "source": "ca563aeb401b388c50e9",
+      "target": "64f9629089ca75640562",
+      "type": "DataFilter"
+    },
+    {
+      "source": "64f9629089ca75640562",
+      "target": "82781a4f9c9c04c0aed5",
+      "type": "DataFilter"
+    },
+    {
+      "source": "64f9629089ca75640562",
+      "target": "ca563aeb401b388c50e9",
+      "type": "DataFilter"
+    }
+  ]
 }

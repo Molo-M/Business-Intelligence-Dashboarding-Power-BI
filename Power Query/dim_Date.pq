@@ -1,7 +1,8 @@
 let
-    // 1. Program runs 10 full weeks from ProgramStartDate (Monday of Week 1)
-    StartDate = ProgramStartDate,
-    EndDate = Date.AddDays(ProgramStartDate, 10 * 7 - 1),
+    // 1. Calendar covers every cohort: from the earliest cohort start
+    //    to the Sunday of the final week of the latest cohort
+    StartDate = List.Min(stg_Cohorts[Cohort Start Date]),
+    EndDate = Date.AddDays(List.Max(stg_Cohorts[Cohort Start Date]), ProgramWeeks * 7 - 1),
     DayCount = Duration.Days(EndDate - StartDate) + 1,
 
     // 2. One row per day
@@ -9,28 +10,19 @@ let
     ToTable = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
     Typed = Table.TransformColumnTypes(ToTable, {{"Date", type date}}),
 
-    // 3. Week columns (same formula as fact_Participation, so they always agree)
-    AddWeek = Table.AddColumn(Typed, "Week", each
-        Number.RoundDown(Duration.Days([Date] - ProgramStartDate) / 7) + 1, Int64.Type),
-    AddWeekLabel = Table.AddColumn(AddWeek, "Week Label", each
-        "Week " & Text.From([Week]), type text),
-    AddWeekStart = Table.AddColumn(AddWeekLabel, "Week Start Date", each
-        Date.AddDays(ProgramStartDate, ([Week] - 1) * 7), type date),
-
-    // 4. Month columns: "Aug 2024" for display, 202408 for sorting
-    AddMonth = Table.AddColumn(AddWeekStart, "Month", each
+    // 3. Month columns: "Aug 2024" for display, 202408 for sorting
+    AddMonth = Table.AddColumn(Typed, "Month", each
         Date.ToText([Date], [Format = "MMM yyyy", Culture = "en-US"]), type text),
     AddMonthSort = Table.AddColumn(AddMonth, "Month Sort", each
         Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
 
-    // 5. Day columns: 1 = Monday ... 7 = Sunday
+    // 4. Day columns: 1 = Monday ... 7 = Sunday
     AddDayName = Table.AddColumn(AddMonthSort, "Day Name", each
         Date.ToText([Date], [Format = "dddd", Culture = "en-US"]), type text),
     AddDayOfWeek = Table.AddColumn(AddDayName, "Day of Week", each
-        Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
+        Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type)
 
-    // 6. Classes run Monday to Friday. Used in Phase 3 to count class days.
-    AddIsClassDay = Table.AddColumn(AddDayOfWeek, "Is Class Day", each
-        if [Day of Week] <= 5 then 1 else 0, Int64.Type)
+    // Program weeks now live in dim_Week, because "Week 3" means
+    // different calendar dates for different cohorts.
 in
-    AddIsClassDay
+    AddDayOfWeek

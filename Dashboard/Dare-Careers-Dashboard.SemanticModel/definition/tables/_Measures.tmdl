@@ -36,25 +36,23 @@ table _Measures
 	measure 'Graduation Rate' =
 			
 			DIVIDE ( [Total Graduations], [Total Learners] )
-		formatString: 0.00%;-0.00%;0.00%
+		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Learners & Outcomes
 		lineageTag: 259df554-80f7-4ad9-9f39-a99761c568af
 
 	measure 'Certification Rate' =
 			
 			DIVIDE ( [Total Certifications], [Total Learners] )
+		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Learners & Outcomes
 		lineageTag: 23f3b8da-7daa-4ccc-acd0-635a9b2d0c71
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	measure 'Dropout Rate' =
 			
 			DIVIDE ( [Total Dropouts], [Total Learners] )
+		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Learners & Outcomes
 		lineageTag: c19cbe89-64a6-419b-87e2-a468ba43a2ea
-
-		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
 	measure 'Class Days' =
 			
@@ -71,7 +69,7 @@ table _Measures
 			    COUNTROWS ( fact_Attendance ),
 			    fact_Attendance[Attended] = TRUE ()
 			)
-		formatString: 0
+		formatString: #,0
 		displayFolder: Attendance
 		lineageTag: e240c339-a824-4629-97bb-baac9563f6e2
 
@@ -79,7 +77,7 @@ table _Measures
 			
 			-- Days attended ÷ days they could have attended
 			DIVIDE ( [Days Attended], [Total Learners] * [Class Days] )
-		formatString: 0.00%;-0.00%;0.00%
+		formatString: 0.0%;-0.0%;0.0%
 		displayFolder: Attendance
 		lineageTag: f3f3efd7-f83d-4aff-bd7b-fcb1b671c627
 
@@ -90,14 +88,14 @@ table _Measures
 			    CALCULATE ( SUM ( fact_Attendance[Minutes] ), fact_Attendance[Attended] = TRUE () ),
 			    60
 			)
-		formatString: 0.0%;-0.0%;0.0%
+		formatString: #,0.0
 		displayFolder: Attendance
 		lineageTag: 6d3ae59a-65a5-4213-b16e-2cd3ee1284e2
 
 	measure 'Avg Hours per Learner' =
 			
 			DIVIDE ( [Total Hours in Class], [Total Learners] )
-		formatString: 0.0%;-0.0%;0.0%
+		formatString: #,0.0
 		displayFolder: Attendance
 		lineageTag: 375b4dc0-e200-4567-af82-d185bf8b0e50
 
@@ -117,21 +115,21 @@ table _Measures
 	measure 'Avg Assessment Score' =
 			
 			AVERAGE ( fact_Assessments[Score] )
-		formatString: 0.0%;-0.0%;0.0%
+		formatString: 0.0
 		displayFolder: Assessments
 		lineageTag: dfdc8296-7dfa-4a86-a55a-06938ea812e9
 
 	measure 'Avg Lab Score' =
 			
 			CALCULATE ( [Avg Assessment Score], fact_Assessments[Type] = "Lab" )
-		formatString: 0.0%;-0.0%;0.0%
+		formatString: 0.0
 		displayFolder: Assessments
 		lineageTag: 0d8f14c3-fe47-4dbf-928d-943573c80b1a
 
 	measure 'Avg Quiz Score' =
 			
 			CALCULATE ( [Avg Assessment Score], fact_Assessments[Type] = "Quiz" )
-		formatString: 0.0%;-0.0%;0.0%
+		formatString: 0.0
 		displayFolder: Assessments
 		lineageTag: fef49151-039b-421d-939c-93d891dc4527
 
@@ -153,6 +151,21 @@ table _Measures
 		formatString: 0.00%;-0.00%;0.00%
 		displayFolder: Assessments
 		lineageTag: 1be8a04f-17ce-4069-9f93-6c92683a882f
+
+	measure 'Days Participated' =
+			
+			COUNTROWS ( fact_Participation )
+		formatString: #,0
+		displayFolder: Participation
+		lineageTag: ba146636-6e80-48ac-a61c-29de72291184
+
+	measure 'Participation Rate' =
+			
+			-- Days participated ÷ class days available
+			DIVIDE ( [Days Participated], [Total Learners] * [Class Days] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Participation
+		lineageTag: 2c788a96-2620-44ce-804c-cd7bdbaefb15
 
 	partition _Measures = m
 		mode: import

@@ -1,0 +1,38 @@
+table dim_Week
+	lineageTag: a711c37c-05a7-4d0a-8292-62244f2bf883
+
+	column Week
+		dataType: int64
+		formatString: 0
+		lineageTag: 71419e16-5fa5-4629-a0e3-ab3876b0d9bc
+		summarizeBy: sum
+		sourceColumn: Week
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Label'
+		dataType: string
+		lineageTag: 518bdb07-b957-4912-8c8d-99c1a56f5c9e
+		summarizeBy: none
+		sourceColumn: Week Label
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_Week = m
+		mode: import
+		queryGroup: Model
+		source =
+				// Program weeks 1..ProgramWeeks. "Week 3" means the 3rd week of a learner's own cohort,
+				// so one Week slicer works across cohorts that started on different dates.
+				let
+				    Weeks = {1..ProgramWeeks},
+				    ToTable = Table.FromList(Weeks, Splitter.SplitByNothing(), {"Week"}),
+				    Typed = Table.TransformColumnTypes(ToTable, {{"Week", Int64.Type}}),
+				    AddLabel = Table.AddColumn(Typed, "Week Label", each "Week " & Text.From([Week]), type text)
+				in
+				    AddLabel
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

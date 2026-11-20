@@ -14,39 +14,6 @@ table dim_Date
 
 		annotation UnderlyingDateTimeDataType = Date
 
-	column Week
-		dataType: int64
-		formatString: 0
-		lineageTag: 40ca7c0e-153d-4165-b974-665d84b9ac07
-		summarizeBy: none
-		sourceColumn: Week
-
-		changedProperty = SortByColumn
-
-		annotation SummarizationSetBy = User
-
-	column 'Week Label'
-		dataType: string
-		lineageTag: e7791c6c-4b12-4d46-baec-8c12dc13bca9
-		summarizeBy: none
-		sourceColumn: Week Label
-		sortByColumn: Week
-
-		changedProperty = SortByColumn
-
-		annotation SummarizationSetBy = Automatic
-
-	column 'Week Start Date'
-		dataType: dateTime
-		formatString: Long Date
-		lineageTag: f18d1b69-2b3e-4d15-b2cd-638dd6405403
-		summarizeBy: none
-		sourceColumn: Week Start Date
-
-		annotation SummarizationSetBy = Automatic
-
-		annotation UnderlyingDateTimeDataType = Date
-
 	column Month
 		dataType: string
 		lineageTag: ec3a746d-e801-4233-841d-9df66a87969b
@@ -93,23 +60,15 @@ table dim_Date
 
 		annotation SummarizationSetBy = Automatic
 
-	column 'Is Class Day'
-		dataType: int64
-		formatString: 0
-		lineageTag: 514b6cf7-af51-4820-a95f-e894179d00ad
-		summarizeBy: sum
-		sourceColumn: Is Class Day
-
-		annotation SummarizationSetBy = Automatic
-
 	partition dim_Date = m
 		mode: import
 		queryGroup: Model
 		source =
 				let
-				    // 1. Program runs 10 full weeks from ProgramStartDate (Monday of Week 1)
-				    StartDate = ProgramStartDate,
-				    EndDate = Date.AddDays(ProgramStartDate, 10 * 7 - 1),
+				    // 1. Calendar covers every cohort: from the earliest cohort start
+				    //    to the Sunday of the final week of the latest cohort
+				    StartDate = List.Min(stg_Cohorts[Cohort Start Date]),
+				    EndDate = Date.AddDays(List.Max(stg_Cohorts[Cohort Start Date]), ProgramWeeks * 7 - 1),
 				    DayCount = Duration.Days(EndDate - StartDate) + 1,
 				
 				    // 2. One row per day
@@ -117,31 +76,22 @@ table dim_Date
 				    ToTable = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
 				    Typed = Table.TransformColumnTypes(ToTable, {{"Date", type date}}),
 				
-				    // 3. Week columns (same formula as fact_Participation, so they always agree)
-				    AddWeek = Table.AddColumn(Typed, "Week", each
-				        Number.RoundDown(Duration.Days([Date] - ProgramStartDate) / 7) + 1, Int64.Type),
-				    AddWeekLabel = Table.AddColumn(AddWeek, "Week Label", each
-				        "Week " & Text.From([Week]), type text),
-				    AddWeekStart = Table.AddColumn(AddWeekLabel, "Week Start Date", each
-				        Date.AddDays(ProgramStartDate, ([Week] - 1) * 7), type date),
-				
-				    // 4. Month columns: "Aug 2024" for display, 202408 for sorting
-				    AddMonth = Table.AddColumn(AddWeekStart, "Month", each
+				    // 3. Month columns: "Aug 2024" for display, 202408 for sorting
+				    AddMonth = Table.AddColumn(Typed, "Month", each
 				        Date.ToText([Date], [Format = "MMM yyyy", Culture = "en-US"]), type text),
 				    AddMonthSort = Table.AddColumn(AddMonth, "Month Sort", each
 				        Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
 				
-				    // 5. Day columns: 1 = Monday ... 7 = Sunday
+				    // 4. Day columns: 1 = Monday ... 7 = Sunday
 				    AddDayName = Table.AddColumn(AddMonthSort, "Day Name", each
 				        Date.ToText([Date], [Format = "dddd", Culture = "en-US"]), type text),
 				    AddDayOfWeek = Table.AddColumn(AddDayName, "Day of Week", each
-				        Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type),
+				        Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type)
 				
-				    // 6. Classes run Monday to Friday. Used in Phase 3 to count class days.
-				    AddIsClassDay = Table.AddColumn(AddDayOfWeek, "Is Class Day", each
-				        if [Day of Week] <= 5 then 1 else 0, Int64.Type)
+				    // Program weeks now live in dim_Week, because "Week 3" means
+				    // different calendar dates for different cohorts.
 				in
-				    AddIsClassDay
+				    AddDayOfWeek
 
 	annotation PBI_NavigationStepName = Navigation
 

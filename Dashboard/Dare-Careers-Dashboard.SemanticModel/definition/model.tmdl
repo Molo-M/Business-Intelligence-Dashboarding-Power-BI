@@ -24,11 +24,15 @@ queryGroup Model
 
 	annotation PBI_QueryGroupOrder = 3
 
+queryGroup Staging
+
+	annotation PBI_QueryGroupOrder = 4
+
 annotation __PBI_TimeIntelligenceEnabled = 0
 
 annotation PBI_ProTooling = ["DevMode"]
 
-annotation PBI_QueryOrder = ["RootFolder","src_AllFiles","fn_DurationToMinutes","fact_Attendance","ProgramStartDate","fact_Assessments","dim_Learner","fact_Participation","dim_Date","_Measures"]
+annotation PBI_QueryOrder = ["RootFolder","src_AllFiles","fn_DurationToMinutes","fact_Attendance","fact_Assessments","dim_Learner","fact_Participation","dim_Date","_Measures","ProgramWeeks","fn_GetCohort","fn_GetTrack","stg_Cohorts","fact_ClassSessions","dim_Week"]
 
 ref table fact_Attendance
 ref table fact_Assessments
@@ -36,6 +40,8 @@ ref table dim_Learner
 ref table fact_Participation
 ref table dim_Date
 ref table _Measures
+ref table fact_ClassSessions
+ref table dim_Week
 
 ref cultureInfo en-US
 

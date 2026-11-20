@@ -1,0 +1,241 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "64f9629089ca75640562",
+  "position": {
+    "x": 855,
+    "y": 265,
+    "z": 9002,
+    "height": 435,
+    "width": 405,
+    "tabOrder": 9002
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Learner"
+                    }
+                  },
+                  "Property": "Cohort"
+                }
+              },
+              "queryRef": "dim_Learner.Cohort",
+              "nativeQueryRef": "Cohort",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Lab Score"
+                }
+              },
+              "queryRef": "_Measures.Avg Lab Score",
+              "nativeQueryRef": "Lab Score",
+              "displayName": "Lab Score"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Quiz Score"
+                }
+              },
+              "queryRef": "_Measures.Avg Quiz Score",
+              "nativeQueryRef": "Quiz Score",
+              "displayName": "Quiz Score"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Avg Assessment Score"
+                }
+              },
+              "queryRef": "_Measures.Avg Assessment Score",
+              "nativeQueryRef": "Assessment Score",
+              "displayName": "Assessment Score"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_Learner"
+                  }
+                },
+                "Property": "Cohort"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "start": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "end": {
+              "expr": {
+                "Literal": {
+                  "Value": "100D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "legend": [
+        {
+          "properties": {
+            "position": {
+              "expr": {
+                "Literal": {
+                  "Value": "'TopCenter'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Average Assessment Scores by Cohort'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "8ebb8a0487e9ec402de6",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_Learner"
+              }
+            },
+            "Property": "Cohort"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "dceadac0d99186987006",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Avg Lab Score"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "3119472bc70a7390243d",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Avg Quiz Score"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "e95b3f7044d02471bbc9",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "_Measures"
+              }
+            },
+            "Property": "Avg Assessment Score"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  }
+}

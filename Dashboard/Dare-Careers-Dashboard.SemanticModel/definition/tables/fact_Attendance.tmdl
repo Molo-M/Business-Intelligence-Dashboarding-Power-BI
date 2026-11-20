@@ -111,6 +111,22 @@ table fact_Attendance
 
 		annotation PBI_FormatHint = {"isGeneralNumber":true}
 
+	column 'Learner Key'
+		dataType: string
+		lineageTag: a3d4c9ce-41cf-483d-9091-9eed7cee1585
+		summarizeBy: none
+		sourceColumn: Learner Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cohort
+		dataType: string
+		lineageTag: 694a785a-9df4-436c-8819-e0687cff5c34
+		summarizeBy: none
+		sourceColumn: Cohort
+
+		annotation SummarizationSetBy = Automatic
+
 	partition fact_Attendance = m
 		mode: import
 		queryGroup: Model
@@ -123,11 +139,9 @@ table fact_Attendance
 				    ZoomFiles = Table.SelectRows(Source, each
 				        [Extension] = ".csv" and Text.Contains([Folder Path], "Zoom Attendance")),
 				
-				    // 3. Track comes from the folder path
-				    AddTrack = Table.AddColumn(ZoomFiles, "Track", each
-				        if Text.Contains([Folder Path], "Cloud Training") then "AWS Cloud"
-				        else if Text.Contains([Folder Path], "PowerBI Training") then "Power BI"
-				        else null, type text),
+				    // 3. Cohort and Track come from the folder path
+				    AddCohort = Table.AddColumn(ZoomFiles, "Cohort", each fn_GetCohort([Folder Path]), type text),
+				    AddTrack = Table.AddColumn(AddCohort, "Track", each fn_GetTrack([Folder Path]), type text),
 				
 				    // 4. Week number comes from the "Week N" folder name
 				    AddWeek = Table.AddColumn(AddTrack, "Week", each
@@ -143,8 +157,8 @@ table fact_Attendance
 				            Csv.Document([Content], [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
 				            [PromoteAllScalars = true])),
 				
-				    // 7. Drop the file-info columns and stack all 100 small tables into one
-				    KeepCols = Table.SelectColumns(AddData, {"Track", "Week", "Date", "Data"}),
+				    // 7. Drop the file-info columns and stack all the small tables into one
+				    KeepCols = Table.SelectColumns(AddData, {"Cohort", "Track", "Week", "Date", "Data"}),
 				    Expanded = Table.ExpandTableColumn(KeepCols, "Data",
 				        {"Name", "Email", "Join Time", "Leave Time", "Duration", "Role"}),
 				
@@ -156,23 +170,27 @@ table fact_Attendance
 				        {"Name", Text.Trim, type text},
 				        {"Email", each Text.Lower(Text.Trim(_)), type text}}),
 				
-				    // 10. Convert Duration to minutes using our function
-				    AddMinutes = Table.AddColumn(Cleaned, "Minutes", each fn_DurationToMinutes([Duration]), type number),
+				    // 10. Learner Key = one enrolment: the same email could appear in a future cohort or another track
+				    AddKey = Table.AddColumn(Cleaned, "Learner Key", each
+				        [Cohort] & "|" & [Track] & "|" & [Email], type text),
 				
-				    // 11. Convert join/leave times (handles both "06:02 PM" and "18:09")
+				    // 11. Convert Duration to minutes using our function
+				    AddMinutes = Table.AddColumn(AddKey, "Minutes", each fn_DurationToMinutes([Duration]), type number),
+				
+				    // 12. Convert join/leave times (handles both "06:02 PM" and "18:09")
 				    Typed = Table.TransformColumnTypes(AddMinutes,
 				        {{"Join Time", type time}, {"Leave Time", type time}}, "en-US"),
 				
-				    // 12. One row per learner per day (adds up minutes if someone dropped and rejoined)
-				    Grouped = Table.Group(Typed, {"Track", "Week", "Date", "Email", "Name"}, {
+				    // 13. One row per learner per day (adds up minutes if someone dropped and rejoined)
+				    Grouped = Table.Group(Typed, {"Learner Key", "Cohort", "Track", "Week", "Date", "Email", "Name"}, {
 				        {"Join Time", each List.Min([Join Time]), type time},
 				        {"Leave Time", each List.Max([Leave Time]), type time},
 				        {"Minutes", each List.Sum([Minutes]), type number}}),
 				
-				    // 13. The project rule: attended only if MORE than 30 minutes
+				    // 14. The project rule: attended only if MORE than 30 minutes
 				    AddAttended = Table.AddColumn(Grouped, "Attended", each [Minutes] > 30, type logical),
 				
-				    // 14. Share of the 120-minute class attended (capped at 100%)
+				    // 15. Share of the 120-minute class attended (capped at 100%)
 				    AddClassPct = Table.AddColumn(AddAttended, "Class Time %", each
 				        List.Min({[Minutes] / 120, 1}), Percentage.Type)
 				in

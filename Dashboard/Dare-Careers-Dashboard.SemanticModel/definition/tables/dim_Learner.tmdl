@@ -101,6 +101,81 @@ table dim_Learner
 
 		annotation SummarizationSetBy = Automatic
 
+	column 'Weeks Attended'
+		dataType: int64
+		formatString: 0
+		lineageTag: 9b9cb23c-f4cc-48ed-8ba7-d020989ee465
+		summarizeBy: none
+		sourceColumn: Weeks Attended
+
+		annotation SummarizationSetBy = User
+
+	column 'Last Week Attended'
+		dataType: int64
+		formatString: 0
+		lineageTag: cc7c3f38-6325-4c9c-a04b-2dc7b9f7de2d
+		summarizeBy: none
+		sourceColumn: Last Week Attended
+
+		annotation SummarizationSetBy = User
+
+	column 'Learner Key'
+		dataType: string
+		lineageTag: 07aebe35-be86-4176-a22e-7b63106b6dde
+		summarizeBy: none
+		sourceColumn: Learner Key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cohort Start Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 445ca73a-be77-40fc-8a38-59843b96a296
+		summarizeBy: none
+		sourceColumn: Cohort Start Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Cohort End Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 4c952eb0-715b-4092-91cf-50ce57ecd92b
+		summarizeBy: none
+		sourceColumn: Cohort End Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Classes Held'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5062f783-7294-4df8-b098-141473e8c6da
+		summarizeBy: sum
+		sourceColumn: Classes Held
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Classes Attended'
+		dataType: int64
+		formatString: 0
+		lineageTag: 88e64a66-fadb-4692-9729-0ebb4ef185b7
+		summarizeBy: sum
+		sourceColumn: Classes Attended
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Has Truncated Attendance'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: a0ff432f-e85d-4a68-bc60-d3cfb9478d4d
+		summarizeBy: none
+		sourceColumn: Has Truncated Attendance
+
+		annotation SummarizationSetBy = Automatic
+
 	partition dim_Learner = m
 		mode: import
 		queryGroup: Model
@@ -109,17 +184,15 @@ table dim_Learner
 				    // 1. Start from the list of all files
 				    Source = src_AllFiles,
 				
-				    // 2. Keep only the two Status workbooks (both file names contain "status")
+				    // 2. Keep only the Status workbooks (both file names contain "status")
 				    Files = Table.SelectRows(Source, each
 				        [Extension] = ".xlsx"
 				        and not Text.StartsWith([Name], "~$")
 				        and Text.Contains(Text.Lower([Name]), "status")),
 				
-				    // 3. Track from folder path (same logic as before)
-				    AddTrack = Table.AddColumn(Files, "Track", each
-				        if Text.Contains([Folder Path], "Cloud Training") then "AWS Cloud"
-				        else if Text.Contains([Folder Path], "PowerBI Training") then "Power BI"
-				        else null, type text),
+				    // 3. Cohort and Track from the folder path
+				    AddCohort = Table.AddColumn(Files, "Cohort", each fn_GetCohort([Folder Path]), type text),
+				    AddTrack = Table.AddColumn(AddCohort, "Track", each fn_GetTrack([Folder Path]), type text),
 				
 				    // 4. Open each workbook and take its first worksheet, whatever it's called
 				    AddData = Table.AddColumn(AddTrack, "Data", each
@@ -129,8 +202,8 @@ table dim_Learner
 				        in
 				            FirstSheet),
 				
-				    // 5. Stack both tracks into one table
-				    KeepCols = Table.SelectColumns(AddData, {"Track", "Data"}),
+				    // 5. Stack all tracks and cohorts into one table
+				    KeepCols = Table.SelectColumns(AddData, {"Cohort", "Track", "Data"}),
 				    Expanded = Table.ExpandTableColumn(KeepCols, "Data",
 				        {"email", "Graduation Status", "Certification Status"},
 				        {"Email", "Graduation Status", "Certification Status"}),
@@ -141,44 +214,85 @@ table dim_Learner
 				        {"Graduation Status", Text.Trim, type text},
 				        {"Certification Status", Text.Trim, type text}}),
 				
-				    // 7. MERGE: look up each learner's name from fact_Attendance (like a VLOOKUP)
-				    Names = Table.Distinct(Table.SelectColumns(fact_Attendance, {"Email", "Name"}), {"Email"}),
-				    Merged = Table.NestedJoin(Cleaned, {"Email"}, Names, {"Email"}, "Lookup", JoinKind.LeftOuter),
-				    AddName = Table.ExpandTableColumn(Merged, "Lookup", {"Name"}, {"Name"}),
+				    // 7. Learner Key = one enrolment (cohort + track + email). This is the model's key.
+				    AddKey = Table.AddColumn(Cleaned, "Learner Key", each
+				        [Cohort] & "|" & [Track] & "|" & [Email], type text),
 				
-				    // 8. Safety net: if someone never joined Zoom (no name found), show their email instead
+				    // 8. MERGE: look up each learner's name from fact_Attendance
+				    Names = Table.Distinct(Table.SelectColumns(fact_Attendance, {"Learner Key", "Name"}), {"Learner Key"}),
+				    MergedNames = Table.NestedJoin(AddKey, {"Learner Key"}, Names, {"Learner Key"}, "NameLookup", JoinKind.LeftOuter),
+				    AddName = Table.ExpandTableColumn(MergedNames, "NameLookup", {"Name"}, {"Name"}),
+				
+				    // 9. Safety net: if someone never joined Zoom (no name found), show their email instead
 				    AddLearnerName = Table.AddColumn(AddName, "Learner Name", each
 				        if [Name] = null or [Name] = "" then [Email] else [Name], type text),
 				    RemoveName = Table.RemoveColumns(AddLearnerName, {"Name"}),
 				
-				    // 9. Cohort label, e.g. "Power BI - Aug 2024"
-				    AddCohort = Table.AddColumn(RemoveName, "Cohort", each
-				        [Track] & " - " & Date.ToText(ProgramStartDate, [Format = "MMM yyyy", Culture = "en-US"]), type text),
+				    // 10. Cohort dates and Program Status from stg_Cohorts
+				    MergedCohort = Table.NestedJoin(RemoveName, {"Cohort"}, stg_Cohorts, {"Cohort"}, "CohortInfo", JoinKind.LeftOuter),
+				    AddCohortInfo = Table.ExpandTableColumn(MergedCohort, "CohortInfo",
+				        {"Cohort Start Date", "Cohort End Date", "Program Status"}),
 				
-				    // 10. Certification type follows the track
-				    AddCertType = Table.AddColumn(AddCohort, "Certification Type", each
-				        if [Track] = "AWS Cloud" then "AWS Cloud Certification"
-				        else if [Track] = "Power BI" then "Power BI Certification"
+				    // 11. Certification type follows the track
+				    AddCertType = Table.AddColumn(AddCohortInfo, "Certification Type", each
+				        if [Track] = "AWS Cloud" then "AWS"
+				        else if [Track] = "Power BI" then "Power BI"
 				        else null, type text),
 				
-				    // 11. Program Status: the program ends on the Friday of Week 10
-				    ProgramEndDate = Date.AddDays(ProgramStartDate, 10 * 7 - 3),
-				    AddProgramStatus = Table.AddColumn(AddCertType, "Program Status", each
-				        if Date.From(DateTime.LocalNow()) > ProgramEndDate then "Completed" else "Ongoing", type text),
+				    // 12. Classes held for the learner's cohort and track (from fact_ClassSessions)
+				    SessionCounts = Table.Group(fact_ClassSessions, {"Cohort", "Track"}, {
+				        {"Classes Held", each Table.RowCount(_), Int64.Type}}),
+				    MergedSessions = Table.NestedJoin(AddCertType, {"Cohort", "Track"},
+				        SessionCounts, {"Cohort", "Track"}, "SessionInfo", JoinKind.LeftOuter),
+				    AddClassesHeld = Table.ExpandTableColumn(MergedSessions, "SessionInfo", {"Classes Held"}),
 				
-				    // 12. 1/0 flags for easy counting and rates in DAX
-				    AddIsGraduate = Table.AddColumn(AddProgramStatus, "Is Graduate", each
+				    // 13. Attendance summary per learner, using only classes that pass the 30-minute rule
+				    AttendedRows = Table.SelectRows(fact_Attendance, each [Attended] = true),
+				    AttendanceSummary = Table.Group(AttendedRows, {"Learner Key"}, {
+				        {"Classes Attended", each Table.RowCount(_), Int64.Type},
+				        {"Weeks Attended", each List.Count(List.Distinct([Week])), Int64.Type},
+				        {"Last Week Attended", each List.Max([Week]), Int64.Type}}),
+				    MergedAttendance = Table.NestedJoin(AddClassesHeld, {"Learner Key"},
+				        AttendanceSummary, {"Learner Key"}, "AttInfo", JoinKind.LeftOuter),
+				    AddAttendance = Table.ExpandTableColumn(MergedAttendance, "AttInfo",
+				        {"Classes Attended", "Weeks Attended", "Last Week Attended"}),
+				
+				    // 14. A learner who never attended has no summary row: show 0, not blank
+				    FillZeros = Table.ReplaceValue(AddAttendance, null, 0, Replacer.ReplaceValue,
+				        {"Classes Held", "Classes Attended", "Weeks Attended", "Last Week Attended"}),
+				    TypedCounts = Table.TransformColumnTypes(FillZeros, {
+				        {"Cohort Start Date", type date}, {"Cohort End Date", type date}, {"Program Status", type text},
+				        {"Classes Held", Int64.Type}, {"Classes Attended", Int64.Type},
+				        {"Weeks Attended", Int64.Type}, {"Last Week Attended", Int64.Type}}),
+				
+				    // 15. TRUNCATED ATTENDANCE: the learner's last attended class was before the final week.
+				    //     Alternative ("missed any class"): replace the condition with
+				    //         [Classes Attended] < [Classes Held]
+				    AddTruncated = Table.AddColumn(TypedCounts, "Has Truncated Attendance", each
+				        [Last Week Attended] < ProgramWeeks, type logical),
+				
+				    // 16. 1/0 flags for easy counting and rates in DAX
+				    AddIsGraduate = Table.AddColumn(AddTruncated, "Is Graduate", each
 				        if [Graduation Status] = "Graduate" then 1 else 0, Int64.Type),
 				    AddIsCertified = Table.AddColumn(AddIsGraduate, "Is Certified", each
 				        if [Certification Status] = "Certified" then 1 else 0, Int64.Type),
-				    AddIsDropout = Table.AddColumn(AddIsCertified, "Is Dropout", each
-				        if [Graduation Status] = "Non Graduate" then 1 else 0, Int64.Type),
 				
-				    // 13. Put columns in a sensible order
+				    // 17. DROPOUT: ALL three conditions must be true (data provider's rule),
+				    //     and only once the cohort's program has finished.
+				    AddIsDropout = Table.AddColumn(AddIsCertified, "Is Dropout", each
+				        if [Program Status] = "Completed"
+				            and [Graduation Status] = "Non Graduate"
+				            and [Certification Status] = "Not Certified"
+				            and [Has Truncated Attendance]
+				        then 1 else 0, Int64.Type),
+				
+				    // 18. Column order
 				    Reordered = Table.ReorderColumns(AddIsDropout, {
-				        "Email", "Learner Name", "Track", "Cohort",
+				        "Learner Key", "Email", "Learner Name", "Cohort", "Track",
+				        "Cohort Start Date", "Cohort End Date", "Program Status",
 				        "Graduation Status", "Certification Status", "Certification Type",
-				        "Program Status", "Is Graduate", "Is Certified", "Is Dropout"})
+				        "Classes Held", "Classes Attended", "Weeks Attended", "Last Week Attended",
+				        "Has Truncated Attendance", "Is Graduate", "Is Certified", "Is Dropout"})
 				in
 				    Reordered
 
