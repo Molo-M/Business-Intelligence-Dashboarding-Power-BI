@@ -29,6 +29,21 @@
               "queryRef": "dim_Learner.Cohort",
               "nativeQueryRef": "Cohort",
               "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Learner"
+                    }
+                  },
+                  "Property": "Track"
+                }
+              },
+              "queryRef": "dim_Learner.Track",
+              "nativeQueryRef": "Track",
+              "active": true
             }
           ]
         },
@@ -155,7 +170,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Outcome Rates by Cohort'"
+                  "Value": "'Outcome Rates by Cohort & Track'"
                 }
               }
             }
@@ -177,65 +192,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "bb0f8b4070452a144801",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "dim_Learner"
-              }
-            },
-            "Property": "Cohort"
-          }
-        },
-        "type": "Categorical"
-      },
-      {
-        "name": "7f0b3cc76aae406c0ab4",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Graduation Rate"
-          }
-        },
-        "type": "Advanced"
-      },
-      {
-        "name": "0b168a97b59b38933c15",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Certification Rate"
-          }
-        },
-        "type": "Advanced"
-      },
-      {
-        "name": "2c488cf90b0229cde161",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Dropout Rate"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

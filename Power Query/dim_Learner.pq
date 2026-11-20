@@ -83,14 +83,17 @@ let
         {"Classes Held", Int64.Type}, {"Classes Attended", Int64.Type},
         {"Weeks Attended", Int64.Type}, {"Last Week Attended", Int64.Type}}),
 
-    // 15. TRUNCATED ATTENDANCE: the learner's last attended class was before the final week.
-    //     Alternative ("missed any class"): replace the condition with
-    //         [Classes Attended] < [Classes Held]
-    AddTruncated = Table.AddColumn(TypedCounts, "Has Truncated Attendance", each
-        [Last Week Attended] < ProgramWeeks, type logical),
+    // 15. INCOMPLETE ATTENDANCE: the learner did not "attend" (more than 30 minutes)
+    //     at least one class that was held for their cohort and track.
+    //     This covers both no-shows and sessions of 30 minutes or less.
+    //     Alternatives:
+    //       a whole week with no attended class:   [Weeks Attended] < ProgramWeeks
+    //       stopped attending before final week:   [Last Week Attended] < ProgramWeeks
+    AddIncomplete = Table.AddColumn(TypedCounts, "Has Incomplete Attendance", each
+        [Classes Attended] < [Classes Held], type logical),
 
     // 16. 1/0 flags for easy counting and rates in DAX
-    AddIsGraduate = Table.AddColumn(AddTruncated, "Is Graduate", each
+    AddIsGraduate = Table.AddColumn(AddIncomplete, "Is Graduate", each
         if [Graduation Status] = "Graduate" then 1 else 0, Int64.Type),
     AddIsCertified = Table.AddColumn(AddIsGraduate, "Is Certified", each
         if [Certification Status] = "Certified" then 1 else 0, Int64.Type),
@@ -101,7 +104,7 @@ let
         if [Program Status] = "Completed"
             and [Graduation Status] = "Non Graduate"
             and [Certification Status] = "Not Certified"
-            and [Has Truncated Attendance]
+            and [Has Incomplete Attendance]
         then 1 else 0, Int64.Type),
 
     // 18. Column order
@@ -110,6 +113,6 @@ let
         "Cohort Start Date", "Cohort End Date", "Program Status",
         "Graduation Status", "Certification Status", "Certification Type",
         "Classes Held", "Classes Attended", "Weeks Attended", "Last Week Attended",
-        "Has Truncated Attendance", "Is Graduate", "Is Certified", "Is Dropout"})
+        "Has Incomplete Attendance", "Is Graduate", "Is Certified", "Is Dropout"})
 in
     Reordered

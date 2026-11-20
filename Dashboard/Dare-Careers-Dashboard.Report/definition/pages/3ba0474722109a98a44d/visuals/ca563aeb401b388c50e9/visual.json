@@ -4,10 +4,10 @@
   "position": {
     "x": 437,
     "y": 265,
-    "z": 9001,
+    "z": 10000,
     "height": 435,
     "width": 405,
-    "tabOrder": 9001
+    "tabOrder": 10000
   },
   "visual": {
     "visualType": "clusteredBarChart",
@@ -28,6 +28,21 @@
               },
               "queryRef": "dim_Learner.Cohort",
               "nativeQueryRef": "Cohort",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Learner"
+                    }
+                  },
+                  "Property": "Track"
+                }
+              },
+              "queryRef": "dim_Learner.Track",
+              "nativeQueryRef": "Track",
               "active": true
             }
           ]
@@ -139,7 +154,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Engagement by Cohort'"
+                  "Value": "'Engagement by Cohort & Track'"
                 }
               }
             }
@@ -161,51 +176,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "2538c045c4762967005d",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "dim_Learner"
-              }
-            },
-            "Property": "Cohort"
-          }
-        },
-        "type": "Categorical"
-      },
-      {
-        "name": "507c7e7f048cb4b732de",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Avg Class Time %"
-          }
-        },
-        "type": "Advanced"
-      },
-      {
-        "name": "f2f30fc28a0755657a31",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Participation Rate"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

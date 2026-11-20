@@ -1,37 +1,50 @@
 table fact_ClassSessions
+	isHidden
 	lineageTag: 3688d2e2-2efa-472f-b984-5b6e4627e0ab
 
 	column Cohort
 		dataType: string
+		isHidden
 		lineageTag: 30f30957-77c8-4e5c-80c4-44bed07672c9
 		summarizeBy: none
 		sourceColumn: Cohort
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
 	column Track
 		dataType: string
+		isHidden
 		lineageTag: f089fa51-0f4b-492a-9978-bbf3fcef526e
 		summarizeBy: none
 		sourceColumn: Track
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
 	column Week
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: c28acacd-f4aa-4653-b9e0-505572b28c02
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: Week
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
 	column Date
 		dataType: dateTime
+		isHidden
 		formatString: Long Date
 		lineageTag: d7e0dfc8-7a9a-4a1a-81f6-9e5ee2870203
 		summarizeBy: none
 		sourceColumn: Date
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
@@ -64,6 +77,8 @@ table fact_ClassSessions
 				    Sessions = Table.Distinct(KeepCols)
 				in
 				    Sessions
+
+	changedProperty = IsHidden
 
 	annotation PBI_NavigationStepName = Navigation
 

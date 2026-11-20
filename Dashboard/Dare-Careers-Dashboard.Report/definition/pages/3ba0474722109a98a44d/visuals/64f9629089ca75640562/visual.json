@@ -4,10 +4,10 @@
   "position": {
     "x": 855,
     "y": 265,
-    "z": 9002,
+    "z": 11000,
     "height": 435,
     "width": 405,
-    "tabOrder": 9002
+    "tabOrder": 11000
   },
   "visual": {
     "visualType": "clusteredBarChart",
@@ -28,6 +28,21 @@
               },
               "queryRef": "dim_Learner.Cohort",
               "nativeQueryRef": "Cohort",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_Learner"
+                    }
+                  },
+                  "Property": "Track"
+                }
+              },
+              "queryRef": "dim_Learner.Track",
+              "nativeQueryRef": "Track",
               "active": true
             }
           ]
@@ -155,7 +170,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Average Assessment Scores by Cohort'"
+                  "Value": "'Assessment Scores by Cohort & Track'"
                 }
               }
             }
@@ -177,65 +192,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "8ebb8a0487e9ec402de6",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "dim_Learner"
-              }
-            },
-            "Property": "Cohort"
-          }
-        },
-        "type": "Categorical"
-      },
-      {
-        "name": "dceadac0d99186987006",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Avg Lab Score"
-          }
-        },
-        "type": "Advanced"
-      },
-      {
-        "name": "3119472bc70a7390243d",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Avg Quiz Score"
-          }
-        },
-        "type": "Advanced"
-      },
-      {
-        "name": "e95b3f7044d02471bbc9",
-        "field": {
-          "Measure": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "_Measures"
-              }
-            },
-            "Property": "Avg Assessment Score"
-          }
-        },
-        "type": "Advanced"
-      }
-    ]
   }
 }

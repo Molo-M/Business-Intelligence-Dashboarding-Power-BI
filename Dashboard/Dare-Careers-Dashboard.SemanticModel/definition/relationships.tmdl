@@ -1,15 +1,3 @@
-relationship AutoDetected_b6fb1cca-a560-4be2-b84f-eb454a45cfa5
-	fromColumn: fact_Attendance.Email
-	toColumn: dim_Learner.Email
-
-relationship AutoDetected_835d5e27-df85-451b-9963-eb50cd1611f1
-	fromColumn: fact_Assessments.Email
-	toColumn: dim_Learner.Email
-
-relationship AutoDetected_c6bc2584-fa34-476b-9a51-6e486605203c
-	fromColumn: fact_Participation.Email
-	toColumn: dim_Learner.Email
-
 relationship 1ef340c0-5a54-2456-6afc-df6c60955b2e
 	fromColumn: fact_Attendance.Date
 	toColumn: dim_Date.Date
@@ -20,5 +8,37 @@ relationship 5a89ac94-de74-7dc9-3a28-b44718a90a76
 
 relationship ee6ed78b-9ef6-7018-ae53-1db28bfb098a
 	fromColumn: fact_Participation.Date
+	toColumn: dim_Date.Date
+
+relationship b3098c3e-a350-962b-2e43-bd1db346f150
+	fromColumn: fact_Attendance.'Learner Key'
+	toColumn: dim_Learner.'Learner Key'
+
+relationship 0b376f6a-0002-7eb4-7d2d-d9607b2feff6
+	fromColumn: fact_Participation.'Learner Key'
+	toColumn: dim_Learner.'Learner Key'
+
+relationship 5508d0d7-c4cb-f491-167b-88c5c86a2179
+	fromColumn: fact_Assessments.'Learner Key'
+	toColumn: dim_Learner.'Learner Key'
+
+relationship 051a0393-8767-0cc2-4509-0bc235e0d803
+	fromColumn: fact_Assessments.Week
+	toColumn: dim_Week.Week
+
+relationship 7a88f763-beaf-fe1b-9a1e-0fcb06d23838
+	fromColumn: fact_Participation.Week
+	toColumn: dim_Week.Week
+
+relationship 7b0b8e02-5583-44f8-2b53-470a40602651
+	fromColumn: fact_Attendance.Week
+	toColumn: dim_Week.Week
+
+relationship 606d0ad7-96b8-1754-cf8c-1b0320c6e773
+	fromColumn: fact_ClassSessions.Week
+	toColumn: dim_Week.Week
+
+relationship d01ef393-bed4-4332-c966-eb25e8a7d428
+	fromColumn: fact_ClassSessions.Date
 	toColumn: dim_Date.Date
 

@@ -17,7 +17,7 @@ table fact_Participation
 		isHidden
 		formatString: 0
 		lineageTag: d6a69841-2fcb-43be-8c0a-287a7e8b96ec
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: Week
 
 		changedProperty = IsHidden
@@ -62,17 +62,23 @@ table fact_Participation
 
 	column 'Learner Key'
 		dataType: string
+		isHidden
 		lineageTag: 67adf5ed-02c5-4f93-a179-0ba98f93e9b1
 		summarizeBy: none
 		sourceColumn: Learner Key
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
 	column Cohort
 		dataType: string
+		isHidden
 		lineageTag: 8232c6a0-13ae-4ad7-812b-142d2babe756
 		summarizeBy: none
 		sourceColumn: Cohort
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 

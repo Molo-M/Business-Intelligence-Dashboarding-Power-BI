@@ -41,11 +41,12 @@ Relationships (all one-to-many, single direction):
 7. **Dropout (data provider's rule):** a learner is a dropout only if **all three** conditions are met:
    - Graduation Status is **Non Graduate**, and
    - Certification Status is **Not Certified**, and
-   - they have **truncated attendance**: their last attended class (more than 30 minutes) was before the
-     final program week.
+   - they have **incomplete attendance**: they did not attend (more than 30 minutes, see rule 4) at least
+     one class held for their cohort and track. This covers both no-shows and sessions of 30 minutes or less
+     (`Classes Attended < Classes Held`).
 
    Dropouts are only counted once the cohort's program has completed.
-   Calculated in Power Query: `dim_Learner[Has Truncated Attendance]` → `dim_Learner[Is Dropout]`.
+   Calculated in Power Query: `dim_Learner[Has Incomplete Attendance]` → `dim_Learner[Is Dropout]`.
 8. **Certification Type:** **AWS** for the AWS Cloud track and **Power BI** for the Power BI track.
 9. **Lab completed:** a lab counts as completed only if its **score is above 0**. A score of 0 is treated
    as not submitted. Zeros are still **included** in average scores.
@@ -54,6 +55,11 @@ Relationships (all one-to-many, single direction):
     fall under **September**.
 11. **Weeks vs months:** the Week slicer uses `dim_Week` (program week, relative to each cohort's start);
     the Month slicer uses `dim_Date` (calendar month).
+12. **At-risk learners:** a learner shows a warning sign for each of: Attendance Rate **below 75%**,
+    Participation Rate **below 75%**, and average assessment score **below 45**. The score threshold sits
+    near the bottom quarter of learners (overall average 50.8); 50 would flag over 40% of learners.
+    All three thresholds are variables at the top of the `At-Risk Flags` measure and can be changed
+    if Dare Careers has an official pass mark or attendance requirement.
 
 ---
 
@@ -252,6 +258,28 @@ Average number of labs completed per learner, out of 10. *Format: decimal, 2 dec
 
 ---
 
+## Learner Insights
+
+### At-Risk Flags
+```dax
+At-Risk Flags =
+-- Number of warning signs (0–3) for ONE learner; blank on totals and group rows
+VAR AttendanceThreshold = 0.75
+VAR ParticipationThreshold = 0.75
+VAR ScoreThreshold = 45
+RETURN
+    IF (
+        HASONEVALUE ( dim_Learner[Learner Key] ),
+        INT ( [Attendance Rate] < AttendanceThreshold )
+            + INT ( [Participation Rate] < ParticipationThreshold )
+            + INT ( [Avg Assessment Score] < ScoreThreshold )
+    )
+```
+How many at-risk signs a learner shows in the current selection (see rule 12). Used to sort and
+colour the Page 2 learner table. *Format: whole number.*
+
+---
+
 ## Validation results
 
 Cohort 1 – Aug 2024, no slicers applied. Values checked against independent calculations
@@ -263,10 +291,10 @@ from the raw source files and against the Power BI QA page.
 | Total Graduations | 33 | 86 | 119 |
 | Total Certifications | 24 | 68 | 92 |
 | Learners meeting dropout conditions 1 + 2 (Non Graduate and Not Certified) | 7 | 14 | 21 |
-| Total Dropouts (all three conditions) | 0 | 0 | 0 |
+| Total Dropouts (all three conditions) |  7 | 0 | 7 |
 | Graduation Rate | 82.5% | 86.0% | 85.0% |
 | Certification Rate | 60.0% | 68.0% | 65.7% |
-| Dropout Rate | 0.0% | 0.0% | 0.0% |
+| Dropout Rate | 17.5% | 0.0% | 5% |
 | Possible Learner Days | 2,000 | 5,000 | 7,000 |
 | Days Attended | 1,585 | 5,000 | 6,585 |
 | Attendance Rate | 79.3% | 100.0% | 94.1% |
@@ -282,5 +310,20 @@ from the raw source files and against the Power BI QA page.
 
 Filter check: with `dim_Week[Week Label]` = Week 1, `Possible Learner Days` = 700 (140 learners × 5 sessions).
 
-Total Dropouts is 0 because every learner who is both Non Graduate and Not Certified still attended
-(more than 30 minutes) at least one class in Week 10.
+Power BI has 0 dropouts because every Power BI learner attended all 50 classes for more than 30 minutes,
+so none has incomplete attendance. AWS Cloud dropouts can be at most 7 (its Non Graduate, Not Certified learners).
+
+### Page 2 checks
+
+| Selection | Labs Completed |
+|---|---|
+| No filters | 1,383 |
+| Month = Aug 2024 (Weeks 1–4) | 555 |
+| Month = Sep 2024 (Weeks 5–9) | 692 |
+| Month = Oct 2024 (Week 10) | 136 |
+| Week = Week 1 | 140 |
+
+| Learner | Participation Rate | Avg Lab Score | Avg Quiz Score | Avg Assessment Score | Labs Completed |
+|---|---|---|---|---|---|
+| James Williams (AWS Cloud) | 90.0% | 57.5 | 52.0 | 54.8 | 10 |
+| Emily Johnson (Power BI) | 92.0% | 58.8 | 41.2 | 50.0 | 10 |

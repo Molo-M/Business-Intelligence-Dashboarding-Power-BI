@@ -27,7 +27,7 @@ table fact_Assessments
 		isHidden
 		formatString: 0
 		lineageTag: 7f277810-17bf-4d79-83e7-ebf81ac80957
-		summarizeBy: sum
+		summarizeBy: none
 		sourceColumn: Week
 
 		changedProperty = IsHidden
@@ -74,17 +74,23 @@ table fact_Assessments
 
 	column 'Learner Key'
 		dataType: string
+		isHidden
 		lineageTag: 78b12006-ab93-418f-9a55-e358389b1745
 		summarizeBy: none
 		sourceColumn: Learner Key
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
 	column Cohort
 		dataType: string
+		isHidden
 		lineageTag: 9cebb39c-1fc4-4c00-b7c5-23544937acda
 		summarizeBy: none
 		sourceColumn: Cohort
+
+		changedProperty = IsHidden
 
 		annotation SummarizationSetBy = Automatic
 
