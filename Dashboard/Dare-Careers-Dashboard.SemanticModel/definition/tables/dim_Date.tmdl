@@ -1,0 +1,99 @@
+table dim_Date
+	lineageTag: 7c6f60c1-230f-410a-a9f8-2589c09aaff7
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: d8db9f33-e78e-4a71-be1e-68a9aa940cd9
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Month
+		dataType: string
+		lineageTag: ec3a746d-e801-4233-841d-9df66a87969b
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Sort'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8f1e5048-d796-4c75-8866-e4e4efe3f39b
+		summarizeBy: sum
+		sourceColumn: Month Sort
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day Name'
+		dataType: string
+		lineageTag: efbd7da7-3f5a-40b8-9ef2-0f73c151547a
+		summarizeBy: none
+		sourceColumn: Day Name
+		sortByColumn: 'Day of Week'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Day of Week'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5d6685de-b227-4d5d-9d8e-6d29e1b59cd8
+		summarizeBy: sum
+		sourceColumn: Day of Week
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_Date = m
+		mode: import
+		queryGroup: Model
+		source =
+				let
+				    // 1. Calendar covers every cohort: from the earliest cohort start
+				    //    to the Sunday of the final week of the latest cohort
+				    StartDate = List.Min(stg_Cohorts[Cohort Start Date]),
+				    EndDate = Date.AddDays(List.Max(stg_Cohorts[Cohort Start Date]), ProgramWeeks * 7 - 1),
+				    DayCount = Duration.Days(EndDate - StartDate) + 1,
+				
+				    // 2. One row per day
+				    Dates = List.Dates(StartDate, DayCount, #duration(1, 0, 0, 0)),
+				    ToTable = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(ToTable, {{"Date", type date}}),
+				
+				    // 3. Month columns: "Aug 2024" for display, 202408 for sorting
+				    AddMonth = Table.AddColumn(Typed, "Month", each
+				        Date.ToText([Date], [Format = "MMM yyyy", Culture = "en-US"]), type text),
+				    AddMonthSort = Table.AddColumn(AddMonth, "Month Sort", each
+				        Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
+				
+				    // 4. Day columns: 1 = Monday ... 7 = Sunday
+				    AddDayName = Table.AddColumn(AddMonthSort, "Day Name", each
+				        Date.ToText([Date], [Format = "dddd", Culture = "en-US"]), type text),
+				    AddDayOfWeek = Table.AddColumn(AddDayName, "Day of Week", each
+				        Date.DayOfWeek([Date], Day.Monday) + 1, Int64.Type)
+				
+				    // Program weeks now live in dim_Week, because "Week 3" means
+				    // different calendar dates for different cohorts.
+				in
+				    AddDayOfWeek
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

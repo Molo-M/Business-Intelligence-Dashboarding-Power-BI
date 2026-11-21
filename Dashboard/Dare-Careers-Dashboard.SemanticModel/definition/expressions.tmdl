@@ -1,0 +1,147 @@
+/// Full path to the repo's Data folder, ending with a backslash
+expression RootFolder = "C:\Users\GADGET STORE\Downloads\AmaliTech\Business-Intelligence-Dashboarding-Power-BI\Data\" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: ddc7bb12-7228-4d47-b41c-f858a252e0e9
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression src_AllFiles =
+		let
+		    Source = Folder.Files(RootFolder)
+		in
+		    Source
+	lineageTag: 243f3046-da1e-4a5a-ba2e-5d75d228ae89
+	queryGroup: Sources
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression fn_DurationToMinutes =
+		// Converts a Zoom duration to minutes.
+		// Accepts: text "1:46:00" / "1:46" / "66", a number (66),
+		// a time value (#time(1,46,0)) or a duration value (#duration(0,1,46,0)).
+		(DurationValue as any) as nullable number =>
+		let
+		    Minutes =
+		        if DurationValue = null then null
+		
+		        // Already a number, e.g. 66
+		        else if Value.Is(DurationValue, type number) then DurationValue
+		
+		        // A duration value
+		        else if Value.Is(DurationValue, type duration) then Duration.TotalMinutes(DurationValue)
+		
+		        // A time value, e.g. 1:46:00 read as a clock time
+		        else if Value.Is(DurationValue, type time) then
+		            Time.Hour(DurationValue) * 60 + Time.Minute(DurationValue) + Time.Second(DurationValue) / 60
+		
+		        // Text: split on ":" and count the pieces
+		        else
+		            let
+		                t = Text.Trim(Text.From(DurationValue)),
+		                Parts = List.Transform(Text.Split(t, ":"), Number.From)
+		            in
+		                if t = "" then null
+		                else if List.Count(Parts) = 3 then Parts{0} * 60 + Parts{1} + Parts{2} / 60
+		                else if List.Count(Parts) = 2 then Parts{0} * 60 + Parts{1}
+		                else Parts{0}
+		in
+		    Minutes
+	lineageTag: dcad27f5-5f0b-4778-adcc-0136577ee684
+	queryGroup: Functions
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression ProgramWeeks = 10 meta [IsParameterQuery=true, Type="Number", IsParameterQueryRequired=true]
+	lineageTag: b6fa5ec8-6d1d-4af7-a111-198307ca3b9f
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Number
+
+expression fn_GetCohort =
+		// Returns the cohort name = the first folder directly below RootFolder.
+		// Example: RootFolder = "C:\...\Data\"
+		//          Folder Path = "C:\...\Data\Cohort 1 - Aug 2024\Cloud Training\Zoom Attendance\Week 1\"
+		//          Result      = "Cohort 1 - Aug 2024"
+		(FolderPath as text) as nullable text =>
+		let
+		    IsUnderRoot = Text.StartsWith(Text.Lower(FolderPath), Text.Lower(RootFolder)),
+		    Relative = if IsUnderRoot then Text.Middle(FolderPath, Text.Length(RootFolder)) else null,
+		    Cohort = if Relative = null then null else Text.BeforeDelimiter(Relative, "\"),
+		    Result = if Cohort = null or Cohort = "" then null else Cohort
+		in
+		    Result
+	lineageTag: 46e9374f-16ed-413e-9dba-ca6805fb0b04
+	queryGroup: Functions
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression fn_GetTrack =
+		// Returns the learning track from a file's folder path.
+		// "...\Cloud Training\..."   -> "AWS Cloud"
+		// "...\PowerBI Training\..." -> "Power BI"
+		(FolderPath as text) as nullable text =>
+		let
+		    p = Text.Lower(FolderPath),
+		    Track =
+		        if Text.Contains(p, "\cloud training\") then "AWS Cloud"
+		        else if Text.Contains(p, "\powerbi training\") then "Power BI"
+		        else null
+		in
+		    Track
+	lineageTag: 5555ef20-9e56-45bd-a582-4ee429939699
+	queryGroup: Functions
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression stg_Cohorts =
+		// One row per cohort, worked out from the Zoom file names (no CSVs are opened).
+		// Cohort Start Date = Monday of the week of the cohort's first class.
+		// Not loaded into the report: other queries look up cohort dates from here.
+		let
+		    Source = src_AllFiles,
+		
+		    // 1. Zoom CSVs only
+		    ZoomFiles = Table.SelectRows(Source, each
+		        [Extension] = ".csv" and Text.Contains([Folder Path], "Zoom Attendance")),
+		
+		    // 2. Cohort from the folder path, class date from the file name
+		    AddCohort = Table.AddColumn(ZoomFiles, "Cohort", each fn_GetCohort([Folder Path]), type text),
+		    AddDate = Table.AddColumn(AddCohort, "Date", each
+		        Date.FromText(Text.Start([Name], 11), [Format = "dd-MMM-yyyy", Culture = "en-US"]), type date),
+		
+		    // 3. First class date per cohort
+		    Grouped = Table.Group(AddDate, {"Cohort"}, {
+		        {"First Class Date", each List.Min([Date]), type date}}),
+		
+		    // 4. Start = Monday of that week; End = Friday of the final program week
+		    AddStart = Table.AddColumn(Grouped, "Cohort Start Date", each
+		        Date.StartOfWeek([First Class Date], Day.Monday), type date),
+		    AddEnd = Table.AddColumn(AddStart, "Cohort End Date", each
+		        Date.AddDays([Cohort Start Date], ProgramWeeks * 7 - 3), type date),
+		
+		    // 5. Completed once today is past the end date
+		    AddStatus = Table.AddColumn(AddEnd, "Program Status", each
+		        if Date.From(DateTime.LocalNow()) > [Cohort End Date] then "Completed" else "Ongoing", type text),
+		
+		    Result = Table.RemoveColumns(AddStatus, {"First Class Date"})
+		in
+		    Result
+	lineageTag: 1a7fddc3-abd1-493d-958d-b9dc5eb280a4
+	queryGroup: Staging
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

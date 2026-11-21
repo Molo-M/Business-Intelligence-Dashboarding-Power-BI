@@ -1,0 +1,212 @@
+table _Measures
+	lineageTag: dfa31e18-9c55-4f54-97b6-61d185ff0c7d
+
+	measure Temp = 1
+		formatString: 0
+		lineageTag: b91bffd2-d4cd-4a73-91ed-972d3cdd1767
+
+	measure 'Total Learners' =
+			
+			COUNTROWS ( dim_Learner )
+		formatString: 0
+		displayFolder: Learners & Outcomes
+		lineageTag: 02275213-5f2a-4151-9644-24219076600b
+
+	measure 'Total Graduations' =
+			
+			SUM ( dim_Learner[Is Graduate] )
+		formatString: 0
+		displayFolder: Learners & Outcomes
+		lineageTag: e5711986-5c98-4ce0-9512-4d761e0f9552
+
+	measure 'Total Certifications' =
+			
+			SUM ( dim_Learner[Is Certified] )
+		formatString: 0
+		displayFolder: Learners & Outcomes
+		lineageTag: 99a0d512-2382-4953-8cc5-15686663b5d2
+
+	measure 'Total Dropouts' =
+			
+			SUM ( dim_Learner[Is Dropout] )
+		formatString: 0
+		displayFolder: Learners & Outcomes
+		lineageTag: 456f44e8-b272-4e35-84b2-20b5aa49f55f
+
+	measure 'Graduation Rate' =
+			
+			DIVIDE ( [Total Graduations], [Total Learners] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Learners & Outcomes
+		lineageTag: 259df554-80f7-4ad9-9f39-a99761c568af
+
+	measure 'Certification Rate' =
+			
+			DIVIDE ( [Total Certifications], [Total Learners] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Learners & Outcomes
+		lineageTag: 23f3b8da-7daa-4ccc-acd0-635a9b2d0c71
+
+	measure 'Dropout Rate' =
+			
+			DIVIDE ( [Total Dropouts], [Total Learners] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Learners & Outcomes
+		lineageTag: c19cbe89-64a6-419b-87e2-a468ba43a2ea
+
+	measure 'Days Attended' =
+			
+			-- Learner-days where the learner stayed MORE than 30 minutes
+			CALCULATE (
+			    COUNTROWS ( fact_Attendance ),
+			    fact_Attendance[Attended] = TRUE ()
+			)
+		formatString: #,0
+		displayFolder: Attendance
+		lineageTag: e240c339-a824-4629-97bb-baac9563f6e2
+
+	measure 'Attendance Rate' =
+			
+			-- Days attended ÷ days that could have been attended
+			DIVIDE ( [Days Attended], [Possible Learner Days] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Attendance
+		lineageTag: f3f3efd7-f83d-4aff-bd7b-fcb1b671c627
+
+	measure 'Total Hours in Class' =
+			
+			-- Only sessions that pass the 30-minute rule count as time in class
+			DIVIDE (
+			    CALCULATE ( SUM ( fact_Attendance[Minutes] ), fact_Attendance[Attended] = TRUE () ),
+			    60
+			)
+		formatString: #,0.0
+		displayFolder: Attendance
+		lineageTag: 6d3ae59a-65a5-4213-b16e-2cd3ee1284e2
+
+	measure 'Avg Hours per Learner' =
+			
+			DIVIDE ( [Total Hours in Class], [Total Learners] )
+		formatString: #,0.0
+		displayFolder: Attendance
+		lineageTag: 375b4dc0-e200-4567-af82-d185bf8b0e50
+
+	measure 'Avg Class Time %' =
+			
+			-- Share of all available class time (120 min per session) actually spent in class
+			VAR ClassMinutesPerDay = 120
+			RETURN
+			    DIVIDE (
+			        [Total Hours in Class] * 60,
+			        [Possible Learner Days] * ClassMinutesPerDay
+			    )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Attendance
+		lineageTag: 9b2c898e-7cfd-4550-aa9b-fe5701133006
+
+	measure 'Avg Assessment Score' =
+			
+			AVERAGE ( fact_Assessments[Score] )
+		formatString: 0.0
+		displayFolder: Assessments
+		lineageTag: dfdc8296-7dfa-4a86-a55a-06938ea812e9
+
+	measure 'Avg Lab Score' =
+			
+			CALCULATE ( [Avg Assessment Score], fact_Assessments[Type] = "Lab" )
+		formatString: 0.0
+		displayFolder: Assessments
+		lineageTag: 0d8f14c3-fe47-4dbf-928d-943573c80b1a
+
+	measure 'Avg Quiz Score' =
+			
+			CALCULATE ( [Avg Assessment Score], fact_Assessments[Type] = "Quiz" )
+		formatString: 0.0
+		displayFolder: Assessments
+		lineageTag: fef49151-039b-421d-939c-93d891dc4527
+
+	measure 'Labs Completed' =
+			
+			-- A lab counts as completed only if it scored above 0
+			CALCULATE (
+			    COUNTROWS ( fact_Assessments ),
+			    fact_Assessments[Type] = "Lab",
+			    fact_Assessments[Score] > 0
+			)
+		formatString: #,0
+		displayFolder: Assessments
+		lineageTag: f76a0f20-cc33-4b04-8635-9c01fb411542
+
+	measure 'Avg Labs Completed per Learner' =
+			
+			DIVIDE ( [Labs Completed], [Total Learners] )
+		formatString: 0.00
+		displayFolder: Assessments
+		lineageTag: 1be8a04f-17ce-4069-9f93-6c92683a882f
+
+	measure 'Days Participated' =
+			
+			COUNTROWS ( fact_Participation )
+		formatString: #,0
+		displayFolder: Participation
+		lineageTag: ba146636-6e80-48ac-a61c-29de72291184
+
+	measure 'Participation Rate' =
+			
+			-- Days participated ÷ days that could have been attended
+			DIVIDE ( [Days Participated], [Possible Learner Days] )
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Participation
+		lineageTag: 2c788a96-2620-44ce-804c-cd7bdbaefb15
+
+	measure 'Possible Learner Days' =
+			
+			-- For each cohort and track in the current selection:
+			-- learners enrolled × class sessions actually held (in the selected weeks/months)
+			SUMX (
+			    SUMMARIZE ( dim_Learner, dim_Learner[Cohort], dim_Learner[Track] ),
+			    VAR CurrentCohort = dim_Learner[Cohort]
+			    VAR CurrentTrack = dim_Learner[Track]
+			    VAR Learners = CALCULATE ( COUNTROWS ( dim_Learner ) )
+			    VAR Sessions =
+			        CALCULATE (
+			            COUNTROWS ( fact_ClassSessions ),
+			            fact_ClassSessions[Cohort] = CurrentCohort,
+			            fact_ClassSessions[Track] = CurrentTrack
+			        )
+			    RETURN
+			        Learners * Sessions
+			)
+		formatString: #,0
+		displayFolder: Attendance
+		lineageTag: 50953eb0-a734-46aa-bc99-69d9ef5ce47b
+
+	measure 'At-Risk Flags' =
+			
+			-- Number of warning signs (0–3) for ONE learner; blank on totals and group rows
+			VAR AttendanceThreshold = 0.75
+			VAR ParticipationThreshold = 0.75
+			VAR ScoreThreshold = 45
+			RETURN
+			    IF (
+			        HASONEVALUE ( dim_Learner[Learner Key] ),
+			        INT ( [Attendance Rate] < AttendanceThreshold )
+			            + INT ( [Participation Rate] < ParticipationThreshold )
+			            + INT ( [Avg Assessment Score] < ScoreThreshold )
+			    )
+		formatString: 0
+		displayFolder: Learner Insights
+		lineageTag: fe04f708-418e-4d13-9713-a802c8498fd7
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+
