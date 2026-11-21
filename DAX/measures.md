@@ -1,6 +1,6 @@
 # DAX Measures
 
-All measures live in the `_Measures` table and are grouped into four display folders.
+All measures live in the `_Measures` table and are grouped into five display folders.
 Every measure is written to return the correct value in any filter context: all cohorts,
 a single cohort or track, a week or month, or an individual learner.
 
@@ -294,7 +294,7 @@ from the raw source files and against the Power BI QA page.
 | Total Dropouts (all three conditions) |  7 | 0 | 7 |
 | Graduation Rate | 82.5% | 86.0% | 85.0% |
 | Certification Rate | 60.0% | 68.0% | 65.7% |
-| Dropout Rate | 17.5% | 0.0% | 5% |
+| Dropout Rate | 17.5% | 0.0% | 5.0% |
 | Possible Learner Days | 2,000 | 5,000 | 7,000 |
 | Days Attended | 1,585 | 5,000 | 6,585 |
 | Attendance Rate | 79.3% | 100.0% | 94.1% |
@@ -311,7 +311,7 @@ from the raw source files and against the Power BI QA page.
 Filter check: with `dim_Week[Week Label]` = Week 1, `Possible Learner Days` = 700 (140 learners × 5 sessions).
 
 Power BI has 0 dropouts because every Power BI learner attended all 50 classes for more than 30 minutes,
-so none has incomplete attendance. AWS Cloud dropouts can be at most 7 (its Non Graduate, Not Certified learners).
+so none has incomplete attendance. All 7 AWS Cloud learners who are Non Graduate and Not Certified had incomplete attendance, so all 7 are dropouts.
 
 ### Page 2 checks
 
