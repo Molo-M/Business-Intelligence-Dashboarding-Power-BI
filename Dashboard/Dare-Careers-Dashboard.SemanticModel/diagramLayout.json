@@ -4,8 +4,8 @@
     {
       "ordinal": 0,
       "scrollPosition": {
-        "x": 60,
-        "y": 0
+        "x": 0,
+        "y": 58.272494741723506
       },
       "nodes": [
         {
@@ -19,7 +19,7 @@
             "height": 300,
             "width": 234
           },
-          "zIndex": 3
+          "zIndex": 2
         },
         {
           "location": {
@@ -32,7 +32,7 @@
             "height": 224,
             "width": 234
           },
-          "zIndex": 4
+          "zIndex": 3
         },
         {
           "location": {
@@ -45,7 +45,7 @@
             "height": 300,
             "width": 234
           },
-          "zIndex": 5
+          "zIndex": 4
         },
         {
           "location": {
@@ -58,7 +58,7 @@
             "height": 200,
             "width": 234
           },
-          "zIndex": 7
+          "zIndex": 6
         },
         {
           "location": {
@@ -71,20 +71,20 @@
             "height": 296,
             "width": 234
           },
-          "zIndex": 6
+          "zIndex": 5
         },
         {
           "location": {
-            "x": 1181.5795608474193,
-            "y": 348.52500402253156
+            "x": 1741.7090293165948,
+            "y": 23.863974527659146
           },
           "nodeIndex": "_Measures",
           "nodeLineageTag": "dfa31e18-9c55-4f54-97b6-61d185ff0c7d",
           "size": {
-            "height": 104,
+            "height": 655.21020941711856,
             "width": 234
           },
-          "zIndex": 1
+          "zIndex": 8
         },
         {
           "location": {
@@ -97,7 +97,7 @@
             "height": 128,
             "width": 234
           },
-          "zIndex": 8
+          "zIndex": 7
         },
         {
           "location": {
@@ -110,11 +110,11 @@
             "height": 176,
             "width": 234
           },
-          "zIndex": 2
+          "zIndex": 1
         }
       ],
       "name": "All tables",
-      "zoomValue": 50,
+      "zoomValue": 56.058468207030209,
       "pinKeyFieldsToTop": false,
       "showExtraHeaderInfo": false,
       "hideKeyFieldsWhenCollapsed": false,

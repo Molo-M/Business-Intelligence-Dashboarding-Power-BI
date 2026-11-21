@@ -4511,7 +4511,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Avg Attendance Rate": {
+			          "Attendance": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -4521,7 +4521,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Attendance": {
+			          "Avg Attendance Rate": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -5327,7 +5327,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Count of Labs": {
+			          "Labs Done": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -5337,7 +5337,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Labs Done": {
+			          "Count of Labs": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -5631,7 +5631,7 @@ cultureInfo en-US
 			          }
 			        },
 			        {
-			          "Avg Participation Rate": {
+			          "Avg Participation": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -5642,6 +5642,16 @@ cultureInfo en-US
 			        },
 			        {
 			          "Participation": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Avg Participation Rate": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -7842,6 +7852,92 @@ cultureInfo en-US
 			          }
 			        }
 			      ]
+			    },
+			    "dim_learner.has_incomplete_attendance": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "dim_Learner",
+			          "ConceptualProperty": "Has Incomplete Attendance"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "has incomplete attendance": {
+			            "State": "Generated"
+			          }
+			        },
+			        {
+			          "has incomplete presence": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.508
+			          }
+			        },
+			        {
+			          "has incomplete appearance": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.508
+			          }
+			        },
+			        {
+			          "has incomplete attending": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.492
+			          }
+			        },
+			        {
+			          "has incomplete turnout": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.482
+			          }
+			        },
+			        {
+			          "has incomplete audience": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.482
+			          }
+			        },
+			        {
+			          "has incomplete gate": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.468
+			          }
+			        },
+			        {
+			          "has incomplete crowd": {
+			            "Type": "Noun",
+			            "State": "Suggested",
+			            "Source": {
+			              "Agent": "Thesaurus"
+			            },
+			            "Weight": 0.468
+			          }
+			        }
+			      ]
 			    }
 			  },
 			  "Relationships": {
@@ -8189,6 +8285,39 @@ cultureInfo en-US
 			        }
 			      ]
 			    },
+			    "dim_learner_has_has_incomplete_attendance": {
+			      "Binding": {
+			        "ConceptualEntity": "dim_Learner"
+			      },
+			      "State": "Generated",
+			      "Roles": {
+			        "dim_learner": {
+			          "Target": {
+			            "Entity": "dim_learner"
+			          }
+			        },
+			        "dim_learner.has_incomplete_attendance": {
+			          "Target": {
+			            "Entity": "dim_learner.has_incomplete_attendance"
+			          }
+			        }
+			      },
+			      "Phrasings": [
+			        {
+			          "Attribute": {
+			            "Subject": {
+			              "Role": "dim_learner"
+			            },
+			            "Object": {
+			              "Role": "dim_learner.has_incomplete_attendance"
+			            }
+			          },
+			          "State": "Generated",
+			          "Weight": 0.99,
+			          "ID": "dim_learners_have_has_incomplete_attendance"
+			        }
+			      ]
+			    },
 			    "dim_week_has_week_label": {
 			      "Binding": {
 			        "ConceptualEntity": "dim_Week"
@@ -8438,39 +8567,6 @@ cultureInfo en-US
 			          "State": "Generated",
 			          "Weight": 0.99,
 			          "ID": "dim_learners_have_possible_learner_days"
-			        }
-			      ]
-			    },
-			    "dim_learner_has_has_truncated_attendance": {
-			      "Binding": {
-			        "ConceptualEntity": "dim_Learner"
-			      },
-			      "State": "Generated",
-			      "Roles": {
-			        "dim_learner": {
-			          "Target": {
-			            "Entity": "dim_learner"
-			          }
-			        },
-			        "dim_learner.has_truncated_attendance": {
-			          "Target": {
-			            "Entity": "dim_learner.has_truncated_attendance"
-			          }
-			        }
-			      },
-			      "Phrasings": [
-			        {
-			          "Attribute": {
-			            "Subject": {
-			              "Role": "dim_learner"
-			            },
-			            "Object": {
-			              "Role": "dim_learner.has_truncated_attendance"
-			            }
-			          },
-			          "State": "Generated",
-			          "Weight": 0.99,
-			          "ID": "dim_learners_have_has_truncated_attendance"
 			        }
 			      ]
 			    },

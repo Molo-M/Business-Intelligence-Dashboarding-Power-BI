@@ -76,7 +76,8 @@
                 }
               },
               "queryRef": "_Measures.Participation Rate",
-              "nativeQueryRef": "Participation Rate"
+              "nativeQueryRef": "Avg Participation",
+              "displayName": "Avg Participation"
             }
           ]
         }
